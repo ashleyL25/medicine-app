@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { insertMedicationSchema, type InsertMedication } from "@shared/schema";
+import { insertMedicationSchema, type InsertMedication, type Medication } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PillIcon from "./pill-icon";
@@ -46,7 +46,7 @@ type MedicationFormData = z.infer<typeof medicationFormSchema>;
 interface AddMedicationModalProps {
   open: boolean;
   onClose: () => void;
-  editingMedication?: any;
+  editingMedication?: Medication;
 }
 
 export default function AddMedicationModal({ open, onClose, editingMedication }: AddMedicationModalProps) {
@@ -134,7 +134,8 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
       form.reset();
       onClose();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error("Medication mutation error:", error);
       toast({
         title: "Error",
         description: editingMedication ? "Failed to update medication" : "Failed to add medication",

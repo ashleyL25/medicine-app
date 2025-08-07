@@ -305,7 +305,7 @@ export default function Journal() {
                   
                   {entry.symptoms && entry.symptoms.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {entry.symptoms.map((symptom) => (
+                      {entry.symptoms.map((symptom: string) => (
                         <span
                           key={symptom}
                           className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full"

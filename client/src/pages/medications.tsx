@@ -48,7 +48,7 @@ export default function Medications() {
   });
 
   // Filter medications
-  const filteredMedications = medications.filter((med: Medication) => {
+  const filteredMedications = (medications as Medication[]).filter((med: Medication) => {
     const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (med.brand && med.brand.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || med.category === categoryFilter;
@@ -58,10 +58,10 @@ export default function Medications() {
     if (frequencyFilter !== "all") {
       if (frequencyFilter === "cycle-based") {
         // Check if it's any cycle-based frequency
-        matchesFrequency = med.frequency && (
+        matchesFrequency = Boolean(med.frequency && (
           med.frequency.includes("cycle-days") || 
           med.frequency === "during-period"
-        );
+        ));
       } else {
         matchesFrequency = med.frequency === frequencyFilter;
       }

@@ -12,7 +12,7 @@ export const sessions = pgTable(
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  (table: { expire: any }) => [index("IDX_session_expire").on(table.expire)],
 );
 
 // User storage table
@@ -84,14 +84,14 @@ export const cycleTracking = pgTable("cycle_tracking", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }: { many: any }) => ({
   medications: many(medications),
   medicationLogs: many(medicationLogs),
   journalEntries: many(journalEntries),
   cycleTracking: many(cycleTracking),
 }));
 
-export const medicationsRelations = relations(medications, ({ one, many }) => ({
+export const medicationsRelations = relations(medications, ({ one, many }: { one: any, many: any }) => ({
   user: one(users, {
     fields: [medications.userId],
     references: [users.id],
@@ -99,7 +99,7 @@ export const medicationsRelations = relations(medications, ({ one, many }) => ({
   logs: many(medicationLogs),
 }));
 
-export const medicationLogsRelations = relations(medicationLogs, ({ one }) => ({
+export const medicationLogsRelations = relations(medicationLogs, ({ one }: { one: any }) => ({
   user: one(users, {
     fields: [medicationLogs.userId],
     references: [users.id],
@@ -110,14 +110,14 @@ export const medicationLogsRelations = relations(medicationLogs, ({ one }) => ({
   }),
 }));
 
-export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
+export const journalEntriesRelations = relations(journalEntries, ({ one }: { one: any }) => ({
   user: one(users, {
     fields: [journalEntries.userId],
     references: [users.id],
   }),
 }));
 
-export const cycleTrackingRelations = relations(cycleTracking, ({ one }) => ({
+export const cycleTrackingRelations = relations(cycleTracking, ({ one }: { one: any }) => ({
   user: one(users, {
     fields: [cycleTracking.userId],
     references: [users.id],
@@ -136,7 +136,7 @@ export const insertMedicationSchema = createInsertSchema(medications).omit({
   userId: true,
   createdAt: true,
 }).extend({
-  purchaseDate: z.union([z.string(), z.date()]).optional().transform((val) => {
+  purchaseDate: z.union([z.string(), z.date()]).optional().transform((val: any) => {
     if (!val || val === "") return null;
     return typeof val === 'string' ? new Date(val) : val;
   }),
@@ -146,7 +146,7 @@ export const insertMedicationLogSchema = createInsertSchema(medicationLogs).omit
   id: true,
   userId: true,
 }).extend({
-  date: z.union([z.string(), z.date()]).transform((val) => 
+  date: z.union([z.string(), z.date()]).transform((val: any) => 
     typeof val === 'string' ? new Date(val) : val
   ),
 });
@@ -157,7 +157,7 @@ export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit(
   createdAt: true,
 }).extend({
   symptoms: z.array(z.string()).optional().default([]),
-  date: z.union([z.string(), z.date()]).transform((val) => 
+  date: z.union([z.string(), z.date()]).transform((val: any) => 
     typeof val === 'string' ? new Date(val) : val
   ),
 });
@@ -166,10 +166,10 @@ export const insertCycleTrackingSchema = createInsertSchema(cycleTracking).omit(
   id: true,
   userId: true,
 }).extend({
-  periodStartDate: z.union([z.string(), z.date()]).transform((val) => 
+  periodStartDate: z.union([z.string(), z.date()]).transform((val: any) => 
     typeof val === 'string' ? new Date(val) : val
   ),
-  periodEndDate: z.union([z.string(), z.date()]).optional().transform((val) => 
+  periodEndDate: z.union([z.string(), z.date()]).optional().transform((val: any) => 
     val ? (typeof val === 'string' ? new Date(val) : val) : null
   ),
 });

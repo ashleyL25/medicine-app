@@ -177,12 +177,12 @@ export default function MedicationCard({
             )}
             {onCheck && (
               <Checkbox
-                checked={isTaken}
-                onCheckedChange={(checked) => {
-                  onCheck(checked as boolean);
+                checked={isTaken ?? false}
+                onCheckedChange={(checked: boolean) => {
+                  onCheck(checked);
                 }}
                 className="check-animation"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
               />
             )}
           </div>
