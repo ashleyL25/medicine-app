@@ -118,12 +118,20 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
   const createMedication = useMutation({
     mutationFn: async (data: InsertMedication) => {
       console.log("Mutation function called with data:", JSON.stringify(data, null, 2));
-      if (editingMedication) {
-        const response = await apiRequest("PATCH", `/api/medications/${editingMedication.id}`, data);
-        return response.json();
-      } else {
-        const response = await apiRequest("POST", "/api/medications", data);
-        return response.json();
+      try {
+        if (editingMedication) {
+          console.log("Updating existing medication...");
+          const response = await apiRequest("PATCH", `/api/medications/${editingMedication.id}`, data);
+          return response.json();
+        } else {
+          console.log("Creating new medication...");
+          const response = await apiRequest("POST", "/api/medications", data);
+          console.log("Response received:", response.status);
+          return response.json();
+        }
+      } catch (error) {
+        console.error("Error in mutation function:", error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -173,6 +181,8 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
   };
 
   const onSubmit = (data: MedicationFormData) => {
+    console.log("Form submitted with data:", data);
+    
     // Convert form data to InsertMedication format
     const processedData: InsertMedication = {
       name: data.name,
@@ -196,6 +206,7 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
     };
     
     console.log("Client sending medication data:", JSON.stringify(processedData, null, 2));
+    console.log("Calling createMedication.mutate...");
     createMedication.mutate(processedData);
   };
 
