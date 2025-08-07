@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// Use Railway auth bypass instead of Replit auth
+import { setupAuth, isAuthenticated } from "./railwayAuth";
 import { insertMedicationSchema, insertMedicationLogSchema, insertJournalEntrySchema, insertCycleTrackingSchema } from "@shared/schema";
 import { z } from "zod";
 
