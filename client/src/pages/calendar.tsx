@@ -93,8 +93,8 @@ export default function Calendar() {
   const trackPeriod = useMutation({
     mutationFn: async (startDate: string) => {
       return await apiRequest("POST", "/api/cycle-tracking", {
-        lastPeriodStart: new Date(startDate),
-        averageCycleLength: 28,
+        periodStartDate: new Date(startDate),
+        cycleLength: 28,
       });
     },
     onSuccess: () => {

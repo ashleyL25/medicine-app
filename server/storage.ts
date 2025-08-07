@@ -194,7 +194,8 @@ export class DatabaseStorage implements IStorage {
     
     const [entry] = await db.select().from(journalEntries)
       .where(and(
-        eq(journalEntries.userId, userId)
+        eq(journalEntries.userId, userId),
+        sql`date(${journalEntries.date}) = ${dateStr}`
       ))
       .limit(1);
     return entry;
