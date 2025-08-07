@@ -59,13 +59,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).user.id;
       console.log("Creating medication for user:", userId);
-      console.log("Request body:", req.body);
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
       
       const validatedData = insertMedicationSchema.parse(req.body);
-      console.log("Validated data:", validatedData);
+      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
       
       const medication = await storage.createMedication(userId, validatedData);
-      console.log("Created medication:", medication);
+      console.log("Created medication:", JSON.stringify(medication, null, 2));
       res.status(201).json(medication);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -73,6 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid medication data", errors: error.errors });
       }
       console.error("Error creating medication:", error);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ message: "Failed to create medication", error: error.message });
     }
   });
