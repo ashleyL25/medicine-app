@@ -154,15 +154,15 @@ export const insertMedicationSchema = createInsertSchema(medications).omit({
   userId: true,
   createdAt: true,
 }).extend({
-  purchaseDate: z.union([z.string(), z.date()]).optional().transform((val: any) => {
+  purchaseDate: z.union([z.string(), z.date(), z.null()]).optional().transform((val: any) => {
     if (!val || val === "") return null;
     return typeof val === 'string' ? new Date(val) : val;
   }),
-  bottleSize: z.union([z.string(), z.number()]).optional().transform((val: any) => {
+  bottleSize: z.union([z.string(), z.number(), z.null()]).optional().transform((val: any) => {
     if (!val || val === "") return null;
     return typeof val === 'string' ? parseInt(val) : val;
   }),
-  daysSupply: z.union([z.string(), z.number()]).optional().transform((val: any) => {
+  daysSupply: z.union([z.string(), z.number(), z.null()]).optional().transform((val: any) => {
     if (!val || val === "") return null;
     return typeof val === 'string' ? parseInt(val) : val;
   }),
