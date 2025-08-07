@@ -193,10 +193,17 @@ export class DatabaseStorage implements IStorage {
     const dateStr = date.toISOString().split('T')[0];
     console.log(`Looking for journal entry for user ${userId} on date ${dateStr}`);
     
+    // Create start and end of day timestamps to handle timezone issues
+    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
+    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+    
+    console.log(`Searching between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`);
+    
     const [entry] = await db.select().from(journalEntries)
       .where(and(
         eq(journalEntries.userId, userId),
-        sql`date(${journalEntries.date}) = ${dateStr}`
+        sql`${journalEntries.date} >= ${startOfDay}`,
+        sql`${journalEntries.date} <= ${endOfDay}`
       ))
       .limit(1);
       
