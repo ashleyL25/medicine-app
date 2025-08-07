@@ -191,6 +191,7 @@ export class DatabaseStorage implements IStorage {
 
   async getJournalEntry(userId: string, date: Date): Promise<JournalEntry | undefined> {
     const dateStr = date.toISOString().split('T')[0];
+    console.log(`Looking for journal entry for user ${userId} on date ${dateStr}`);
     
     const [entry] = await db.select().from(journalEntries)
       .where(and(
@@ -198,10 +199,13 @@ export class DatabaseStorage implements IStorage {
         sql`date(${journalEntries.date}) = ${dateStr}`
       ))
       .limit(1);
+      
+    console.log(`Found journal entry:`, entry ? 'YES' : 'NO');
     return entry;
   }
 
   async createJournalEntry(userId: string, insertEntry: InsertJournalEntry): Promise<JournalEntry> {
+    console.log(`Creating journal entry for user ${userId} with date:`, insertEntry.date);
     const [entry] = await db
       .insert(journalEntries)
       .values({ 
@@ -210,6 +214,7 @@ export class DatabaseStorage implements IStorage {
         symptoms: insertEntry.symptoms || []
       })
       .returning();
+    console.log(`Created journal entry with stored date:`, entry.date);
     return entry;
   }
 
