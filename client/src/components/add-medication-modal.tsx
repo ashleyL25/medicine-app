@@ -28,7 +28,7 @@ const medicationFormSchema = z.object({
   category: z.string().optional(),
   bottleSize: z.string().optional(),
   purchaseDate: z.string().or(z.date()).optional().transform((val) => {
-    if (!val || val === "") return "";
+    if (!val || val === "") return null;
     if (typeof val === "string") return val;
     return val.toISOString().split('T')[0];
   }),
@@ -136,9 +136,24 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
     },
     onError: (error: Error) => {
       console.error("Medication mutation error:", error);
+      let errorMessage = editingMedication ? "Failed to update medication" : "Failed to add medication";
+      
+      // Try to extract more specific error message
+      if (error.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          // If parsing fails, use the original error message
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: editingMedication ? "Failed to update medication" : "Failed to add medication",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -169,7 +184,7 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
       purpose: data.purpose || null,
       category: data.category || null,
       bottleSize: data.bottleSize ? Number(data.bottleSize) : null,
-      purchaseDate: data.purchaseDate && data.purchaseDate !== "" ? new Date(data.purchaseDate) : null,
+      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
       daysSupply: data.daysSupply ? Number(data.daysSupply) : null,
       doctor: data.doctor || null,
       cost: data.cost || null,

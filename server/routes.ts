@@ -58,15 +58,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/medications", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.id;
+      console.log("Creating medication for user:", userId);
+      console.log("Request body:", req.body);
+      
       const validatedData = insertMedicationSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
+      
       const medication = await storage.createMedication(userId, validatedData);
+      console.log("Created medication:", medication);
       res.status(201).json(medication);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Validation error:", error.errors);
         return res.status(400).json({ message: "Invalid medication data", errors: error.errors });
       }
       console.error("Error creating medication:", error);
-      res.status(500).json({ message: "Failed to create medication" });
+      res.status(500).json({ message: "Failed to create medication", error: error.message });
     }
   });
 
@@ -164,10 +171,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).user.id;
       const date = new Date(req.params.date);
       const entry = await storage.getJournalEntry(userId, date);
-      if (!entry) {
-        return res.status(404).json({ message: "Journal entry not found" });
-      }
-      res.json(entry);
+      // Return null instead of 404 when no entry is found
+      res.json(entry || null);
     } catch (error) {
       console.error("Error fetching journal entry:", error);
       res.status(500).json({ message: "Failed to fetch journal entry" });

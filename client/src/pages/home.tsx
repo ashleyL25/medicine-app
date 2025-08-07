@@ -114,7 +114,9 @@ export default function Home() {
       }
     },
     onSuccess: () => {
+      // Invalidate all journal-related queries to ensure calendar updates
       queryClient.invalidateQueries({ queryKey: ["/api/journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/journal-entries/date"] });
       toast({
         title: "Saved",
         description: "Journal entry saved successfully",

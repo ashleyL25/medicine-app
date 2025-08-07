@@ -35,8 +35,25 @@ export default function Calendar() {
     queryKey: ["/api/medication-logs", currentDate],
   });
 
+  const { data: journalEntries = [] } = useQuery<JournalEntry[]>({
+    queryKey: ["/api/journal-entries"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/journal-entries");
+      return await response.json();
+    },
+  });
+
   const { data: selectedDateJournal } = useQuery<JournalEntry | null>({
     queryKey: ["/api/journal-entries/date", selectedDate?.toISOString().split('T')[0]],
+    queryFn: async () => {
+      if (!selectedDate) return null;
+      try {
+        const response = await apiRequest("GET", `/api/journal-entries/date/${selectedDate.toISOString().split('T')[0]}`);
+        return await response.json();
+      } catch (error) {
+        return null;
+      }
+    },
     enabled: !!selectedDate,
   });
 
@@ -288,6 +305,19 @@ export default function Calendar() {
                     <div className="w-2 h-2 bg-yellow-400 rounded-full" title="Medications skipped" />
                   )}
                 </div>
+                
+                {/* Journal entry indicator */}
+                <div className="absolute bottom-1 right-1">
+                  {(() => {
+                    // Check if there's a journal entry for this date
+                    const hasJournalEntry = journalEntries.some(entry => 
+                      isSameDay(new Date(entry.date), date)
+                    );
+                    return hasJournalEntry ? (
+                      <div className="w-2 h-2 bg-purple-400 rounded-full" title="Journal entry" />
+                    ) : null;
+                  })()}
+                </div>
               </div>
             );
           })}
@@ -314,6 +344,10 @@ export default function Calendar() {
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-yellow-400 rounded-full" />
             <span>Medications Skipped</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-purple-400 rounded-full" />
+            <span>Journal Entry</span>
           </div>
         </div>
       </Card>
