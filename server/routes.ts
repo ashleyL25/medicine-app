@@ -61,7 +61,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating medication for user:", userId);
       console.log("Request body length:", JSON.stringify(req.body).length);
       console.log("Request body keys:", Object.keys(req.body));
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
       
       // Check if all required fields are present
       const requiredFields = ['name', 'strength', 'dosage', 'frequency'];
@@ -71,11 +70,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields", missingFields });
       }
       
+      console.log("All required fields present, proceeding with validation...");
       const validatedData = insertMedicationSchema.parse(req.body);
-      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
+      console.log("Validation successful, creating medication...");
       
       const medication = await storage.createMedication(userId, validatedData);
-      console.log("Created medication:", JSON.stringify(medication, null, 2));
+      console.log("Medication created successfully with ID:", medication.id);
       res.status(201).json(medication);
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -123,11 +123,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMedication(userId: string, insertMedication: InsertMedication): Promise<Medication> {
-    const [medication] = await db
-      .insert(medications)
-      .values({ ...insertMedication, userId })
-      .returning();
-    return medication;
+    console.log("Storage: Creating medication with data:", {
+      userId,
+      name: insertMedication.name,
+      strength: insertMedication.strength,
+      dosage: insertMedication.dosage,
+      frequency: insertMedication.frequency
+    });
+    
+    try {
+      const [medication] = await db
+        .insert(medications)
+        .values({ ...insertMedication, userId })
+        .returning();
+      console.log("Storage: Medication created successfully:", medication.id);
+      return medication;
+    } catch (error) {
+      console.error("Storage: Error creating medication:", error);
+      throw error;
+    }
   }
 
   async updateMedication(id: string, updates: Partial<InsertMedication>): Promise<Medication | undefined> {
