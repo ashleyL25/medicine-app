@@ -464,7 +464,7 @@ export default function Calendar() {
 function getCurrentCycleDayForDate(date: Date, cycle?: CycleTracking | null): number | null {
   if (!cycle) return null;
 
-  const cycleStartDate = cycle.periodStartDate;
+  const cycleStartDate = new Date(cycle.periodStartDate);
   const daysSinceStart = Math.floor((date.getTime() - cycleStartDate.getTime()) / (24 * 60 * 60 * 1000));
   const cycleLength = cycle.cycleLength || 28;
   
