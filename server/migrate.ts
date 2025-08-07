@@ -1,8 +1,9 @@
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 
+// Force deployment update - v2.0
 export async function runMigrations() {
-  console.log("🔄 Running database migrations...");
+  console.log("🔄 Running database migrations (v2.0)...");
 
   try {
     // Enable UUID extension
