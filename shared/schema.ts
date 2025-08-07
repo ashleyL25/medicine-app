@@ -158,6 +158,14 @@ export const insertMedicationSchema = createInsertSchema(medications).omit({
     if (!val || val === "") return null;
     return typeof val === 'string' ? new Date(val) : val;
   }),
+  bottleSize: z.union([z.string(), z.number()]).optional().transform((val: any) => {
+    if (!val || val === "") return null;
+    return typeof val === 'string' ? parseInt(val) : val;
+  }),
+  daysSupply: z.union([z.string(), z.number()]).optional().transform((val: any) => {
+    if (!val || val === "") return null;
+    return typeof val === 'string' ? parseInt(val) : val;
+  }),
 });
 
 export const insertMedicationLogSchema = createInsertSchema(medicationLogs).omit({
