@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Pill, Calendar, BookOpen } from "lucide-react";
+import AuthModal from "@/components/auth-modal";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Landing() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const queryClient = useQueryClient();
   return (
     <div className="min-h-screen bg-gradient-to-br from-app-light-bronze via-white to-app-light-bronze">
       <div className="container mx-auto px-4 py-16">
@@ -16,11 +21,11 @@ export default function Landing() {
             cycle management, and daily wellness journaling.
           </p>
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => setShowAuthModal(true)}
             size="lg"
             className="bg-app-blue hover:bg-app-blue/90 text-white px-12 py-4 text-xl rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 font-medium"
           >
-            Sign In to Continue
+            Get Started
           </Button>
         </div>
 
@@ -73,6 +78,15 @@ export default function Landing() {
           </p>
         </div>
       </div>
+
+      <AuthModal 
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries(); // Refresh all queries
+          window.location.reload(); // Reload to reset app state
+        }}
+      />
     </div>
   );
 }

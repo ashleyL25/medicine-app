@@ -15,13 +15,16 @@ export const sessions = pgTable(
   (table: { expire: any }) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table
+// User storage table  
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
+  passwordHash: varchar("password_hash").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  isActive: boolean("is_active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -127,8 +130,23 @@ export const cycleTrackingRelations = relations(cycleTracking, ({ one }: { one: 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  passwordHash: true, // Don't include password hash in public schema
   createdAt: true,
   updatedAt: true,
+  lastLoginAt: true,
+});
+
+// Auth-specific schemas
+export const registerUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+});
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const insertMedicationSchema = createInsertSchema(medications).omit({

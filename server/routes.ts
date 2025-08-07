@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-// Use Railway auth bypass instead of Replit auth
-import { setupAuth, isAuthenticated } from "./railwayAuth";
+// Use proper JWT authentication
+import { setupAuth, isAuthenticated } from "./auth";
 import { insertMedicationSchema, insertMedicationLogSchema, insertJournalEntrySchema, insertCycleTrackingSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -28,37 +28,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req as any).user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
-  app.patch('/api/auth/user', isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req as any).user.claims.sub;
-      const updateData = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-      };
-      const user = await storage.updateUser(userId, updateData);
-      res.json(user);
-    } catch (error) {
-      console.error("Error updating user:", error);
-      res.status(500).json({ message: "Failed to update user" });
-    }
-  });
+  // Auth routes are now handled in setupAuth() function
   
   // Medications
   app.get("/api/medications", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const medications = await storage.getMedications(userId);
       res.json(medications);
     } catch (error) {
@@ -82,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/medications", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const validatedData = insertMedicationSchema.parse(req.body);
       const medication = await storage.createMedication(userId, validatedData);
       res.status(201).json(medication);
@@ -128,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Medication Logs
   app.get("/api/medication-logs", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const { date, medicationId } = req.query;
       const dateParam = date ? new Date(date as string) : undefined;
       const logs = await storage.getMedicationLogs(userId, dateParam, medicationId as string);
@@ -141,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/medication-logs", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const validatedData = insertMedicationLogSchema.parse(req.body);
       const log = await storage.createMedicationLog(userId, validatedData);
       res.status(201).json(log);
@@ -174,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Journal Entries
   app.get("/api/journal-entries", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const { limit } = req.query;
       const entries = await storage.getJournalEntries(userId, limit ? parseInt(limit as string) : undefined);
       res.json(entries);
@@ -186,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/journal-entries/date/:date", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const date = new Date(req.params.date);
       const entry = await storage.getJournalEntry(userId, date);
       if (!entry) {
@@ -201,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/journal-entries", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const validatedData = insertJournalEntrySchema.parse(req.body);
       const entry = await storage.createJournalEntry(userId, validatedData);
       res.status(201).json(entry);
@@ -234,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cycle Tracking
   app.get("/api/cycle-tracking", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const cycles = await storage.getCycleTrackings(userId);
       res.json(cycles);
     } catch (error) {
@@ -245,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/cycle-tracking/current", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const cycle = await storage.getCurrentCycle(userId);
       res.json(cycle);
     } catch (error) {
@@ -256,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/cycle-tracking", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user.claims.sub;
+      const userId = (req as any).user.id;
       const validatedData = insertCycleTrackingSchema.parse(req.body);
       const cycle = await storage.createCycleTracking(userId, validatedData);
       res.status(201).json(cycle);

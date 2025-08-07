@@ -22,8 +22,11 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: { email: string; passwordHash: string; firstName: string; lastName: string }): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, userData: Partial<User>): Promise<User>;
+  updateUserLastLogin(id: string): Promise<void>;
 
   // Medications
   getMedications(userId: string): Promise<Medication[]>;
@@ -83,6 +86,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        lastLoginAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
   }
 
   // Medications
