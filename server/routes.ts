@@ -59,7 +59,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).user.id;
       console.log("Creating medication for user:", userId);
+      console.log("Request body length:", JSON.stringify(req.body).length);
+      console.log("Request body keys:", Object.keys(req.body));
       console.log("Request body:", JSON.stringify(req.body, null, 2));
+      
+      // Check if all required fields are present
+      const requiredFields = ['name', 'strength', 'dosage', 'frequency'];
+      const missingFields = requiredFields.filter(field => !req.body[field]);
+      if (missingFields.length > 0) {
+        console.error("Missing required fields:", missingFields);
+        return res.status(400).json({ message: "Missing required fields", missingFields });
+      }
       
       const validatedData = insertMedicationSchema.parse(req.body);
       console.log("Validated data:", JSON.stringify(validatedData, null, 2));

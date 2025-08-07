@@ -117,6 +117,7 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
 
   const createMedication = useMutation({
     mutationFn: async (data: InsertMedication) => {
+      console.log("Mutation function called with data:", JSON.stringify(data, null, 2));
       if (editingMedication) {
         const response = await apiRequest("PATCH", `/api/medications/${editingMedication.id}`, data);
         return response.json();
@@ -193,6 +194,8 @@ export default function AddMedicationModal({ open, onClose, editingMedication }:
       notes: data.notes || null,
       imageUrl: imagePreview || data.imageUrl || null,
     };
+    
+    console.log("Client sending medication data:", JSON.stringify(processedData, null, 2));
     createMedication.mutate(processedData);
   };
 
