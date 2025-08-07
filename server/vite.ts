@@ -45,11 +45,24 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
-      const clientTemplate = path.resolve(
-        process.cwd(),
-        "client",
-        "index.html",
-      );
+      // Try multiple possible locations for the client template
+      const possibleTemplates = [
+        "/app/client/index.html",
+        "./client/index.html", 
+        "client/index.html"
+      ];
+      
+      let clientTemplate: string | null = null;
+      for (const template of possibleTemplates) {
+        if (fs.existsSync(template)) {
+          clientTemplate = template;
+          break;
+        }
+      }
+      
+      if (!clientTemplate) {
+        throw new Error("Could not find client/index.html template");
+      }
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
@@ -67,55 +80,59 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const cwd = process.cwd();
-  console.log("Current working directory:", cwd);
-  console.log("Process argv:", process.argv);
-  console.log("__dirname available:", typeof __dirname !== 'undefined' ? __dirname : 'undefined');
+  // Use hardcoded paths that we know will work on Railway
+  const possiblePaths = [
+    "/app/dist/public",        // Railway working directory
+    "./dist/public",           // Relative to current directory
+    "dist/public",             // Another relative option
+    "/app/public",             // Alternative Railway path
+    "./public"                 // Fallback
+  ];
   
-  const distPath = path.resolve(cwd, "dist", "public");
-  console.log("Looking for static files in:", distPath);
-  console.log("Directory exists:", fs.existsSync(distPath));
+  console.log("Searching for static files in possible paths...");
   
-  if (fs.existsSync(distPath)) {
-    console.log("Contents of dist/public:", fs.readdirSync(distPath));
-  }
-
-  if (!fs.existsSync(distPath)) {
-    // Try alternative paths
-    const altPath1 = path.resolve(cwd, "public");
-    const altPath2 = path.resolve("/app", "dist", "public");
-    
-    console.log("Trying alternative paths:");
-    console.log("Alt path 1:", altPath1, "exists:", fs.existsSync(altPath1));
-    console.log("Alt path 2:", altPath2, "exists:", fs.existsSync(altPath2));
-    
-    if (fs.existsSync(altPath1)) {
-      console.log("Using alternative path:", altPath1);
-      app.use(express.static(altPath1));
-      app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(altPath1, "index.html"));
-      });
-      return;
+  let staticPath: string | null = null;
+  
+  for (const testPath of possiblePaths) {
+    console.log(`Checking: ${testPath}`);
+    if (fs.existsSync(testPath)) {
+      console.log(`✓ Found static files at: ${testPath}`);
+      if (fs.existsSync(path.join(testPath, "index.html"))) {
+        console.log("✓ index.html found");
+        staticPath = testPath;
+        break;
+      } else {
+        console.log("✗ No index.html found");
+      }
+    } else {
+      console.log("✗ Path does not exist");
     }
-    
-    if (fs.existsSync(altPath2)) {
-      console.log("Using alternative path:", altPath2);
-      app.use(express.static(altPath2));
-      app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(altPath2, "index.html"));
-      });
-      return;
-    }
-    
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
   }
-
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
+  
+  if (!staticPath) {
+    console.error("Could not find static files in any of the expected locations");
+    console.error("Available paths:", possiblePaths);
+    
+    // Last resort - try to serve something
+    app.use("*", (_req, res) => {
+      res.status(200).json({ 
+        error: "Static files not found",
+        message: "The React app could not be loaded",
+        possiblePaths: possiblePaths
+      });
+    });
+    return;
+  }
+  
+  console.log(`Using static path: ${staticPath}`);
+  
+  // Serve static files
+  app.use(express.static(staticPath));
+  
+  // Fallback to index.html for SPA routing
   app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const indexPath = path.join(staticPath!, "index.html");
+    console.log(`Serving index.html from: ${indexPath}`);
+    res.sendFile(path.resolve(indexPath));
   });
 }
