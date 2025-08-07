@@ -37,7 +37,11 @@ export default function Home() {
   });
 
   const { data: medicationLogs = [] } = useQuery<MedicationLog[]>({
-    queryKey: ["/api/medication-logs", { date: today.toISOString().split('T')[0] }],
+    queryKey: ["/api/medication-logs", today.toISOString().split('T')[0]],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/medication-logs?date=${today.toISOString().split('T')[0]}`);
+      return await response.json();
+    },
   });
 
   const { data: todaysJournal } = useQuery<JournalEntry>({

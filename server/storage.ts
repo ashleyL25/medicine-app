@@ -166,6 +166,14 @@ export class DatabaseStorage implements IStorage {
   async getMedicationLogs(userId: string, date?: Date, medicationId?: string): Promise<MedicationLog[]> {
     let conditions = [eq(medicationLogs.userId, userId)];
     
+    if (date) {
+      const dateStr = date.toISOString().split('T')[0];
+      const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
+      const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+      conditions.push(sql`${medicationLogs.date} >= ${startOfDay}`);
+      conditions.push(sql`${medicationLogs.date} <= ${endOfDay}`);
+    }
+    
     if (medicationId) {
       conditions.push(eq(medicationLogs.medicationId, medicationId));
     }
