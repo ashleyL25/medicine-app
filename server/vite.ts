@@ -46,8 +46,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "..",
+        process.cwd(),
         "client",
         "index.html",
       );
@@ -68,9 +67,46 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(process.cwd(), "dist", "public");
+  const cwd = process.cwd();
+  console.log("Current working directory:", cwd);
+  console.log("Process argv:", process.argv);
+  console.log("__dirname available:", typeof __dirname !== 'undefined' ? __dirname : 'undefined');
+  
+  const distPath = path.resolve(cwd, "dist", "public");
+  console.log("Looking for static files in:", distPath);
+  console.log("Directory exists:", fs.existsSync(distPath));
+  
+  if (fs.existsSync(distPath)) {
+    console.log("Contents of dist/public:", fs.readdirSync(distPath));
+  }
 
   if (!fs.existsSync(distPath)) {
+    // Try alternative paths
+    const altPath1 = path.resolve(cwd, "public");
+    const altPath2 = path.resolve("/app", "dist", "public");
+    
+    console.log("Trying alternative paths:");
+    console.log("Alt path 1:", altPath1, "exists:", fs.existsSync(altPath1));
+    console.log("Alt path 2:", altPath2, "exists:", fs.existsSync(altPath2));
+    
+    if (fs.existsSync(altPath1)) {
+      console.log("Using alternative path:", altPath1);
+      app.use(express.static(altPath1));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(altPath1, "index.html"));
+      });
+      return;
+    }
+    
+    if (fs.existsSync(altPath2)) {
+      console.log("Using alternative path:", altPath2);
+      app.use(express.static(altPath2));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(altPath2, "index.html"));
+      });
+      return;
+    }
+    
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
